@@ -1,4 +1,3 @@
-
 import { Habit, HabitHistory } from '@/types/habit';
 
 const STORAGE_KEY = 'habit-pathfinder-data';
@@ -10,26 +9,7 @@ export interface StorageData {
 }
 
 const defaultData: StorageData = {
-  habits: [
-    {
-      id: '1',
-      name: 'Exercitar-se',
-      days: [1, 2, 3, 4, 5],
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '2', 
-      name: 'Ler 30 minutos',
-      days: [0, 1, 2, 3, 4, 5, 6],
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '3',
-      name: 'Meditar',
-      days: [1, 3, 5],
-      createdAt: new Date().toISOString()
-    }
-  ],
+  habits: [],
   history: [],
   version: '1.0'
 };

@@ -1,32 +1,44 @@
 
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Habit Pathfinder - Trilhe o caminho dos seus hábitos</title>
-    <meta name="description" content="Organize seus hábitos diários de forma simples e eficiente. Crie rotinas personalizadas, acompanhe seu progresso e transforme sua vida um hábito por vez." />
-    <meta name="author" content="Habit Pathfinder" />
-
-    <meta property="og:title" content="Habit Pathfinder - Trilhe o caminho dos seus hábitos" />
-    <meta property="og:description" content="📋 App moderno para organizar seus hábitos diários. Crie rotinas personalizadas, acompanhe seu progresso e transforme sua vida!" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#8b5cf6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Habit Pathfinder">
-    <meta name="mobile-web-app-capable" content="yes">
-  </head>
-
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meus Hábitos - Habit Pathfinder</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Organize seus hábitos diários de forma simples e eficiente com o Habit Pathfinder">
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Meus Hábitos">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- PWA Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png">
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('SW registered: ', registration);
+          })
+          .catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
