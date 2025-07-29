@@ -22,19 +22,62 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png">
   
-  <!-- Service Worker Registration -->
+  <!-- Service Worker Registration with Enhanced Logging -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        console.log('Main: Registering service worker...');
+        
+        navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+          updateViaCache: 'none'
+        })
           .then(registration => {
-            console.log('SW registered: ', registration);
+            console.log('Main: SW registered successfully:', registration);
+            
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+              console.log('Main: SW update found');
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  console.log('Main: SW state changed to:', newWorker.state);
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('Main: New SW available, sending skip waiting message');
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                });
+              }
+            });
+            
+            // Force update check
+            registration.update();
           })
           .catch(registrationError => {
-            console.log('SW registration failed: ', registrationError);
+            console.error('Main: SW registration failed:', registrationError);
           });
+
+        // Listen for controller change (new SW activated)
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('Main: SW controller changed, reloading page');
+          window.location.reload();
+        });
       });
+    } else {
+      console.warn('Main: Service workers not supported');
     }
+
+    // Enhanced beforeinstallprompt logging
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('Main: beforeinstallprompt event detected');
+      console.log('Main: Event details:', e);
+    });
+
+    // Enhanced appinstalled logging
+    window.addEventListener('appinstalled', (e) => {
+      console.log('Main: App was installed');
+      console.log('Main: Event details:', e);
+    });
   </script>
 </head>
 <body>
