@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'habit-pathfinder-v1';
+const CACHE_NAME = 'habit-pathfinder-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -10,7 +10,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing');
+  console.log('Service Worker: Installing v2');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -21,6 +21,26 @@ self.addEventListener('install', (event) => {
         console.error('Service Worker: Cache failed', error);
       })
   );
+  // Force activation of new service worker
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker: Activating v2');
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Service Worker: Deleting old cache', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  // Take control of all pages
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {

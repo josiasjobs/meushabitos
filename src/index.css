@@ -92,9 +92,28 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
+  html, body {
     @apply bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600 min-h-screen text-foreground;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden; /* Prevent page scroll */
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #root {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
+  
+  /* Prevent touch scrolling on mobile */
+  body {
+    touch-action: manipulation;
+  }
+  
+  /* Ensure scroll areas work properly */
+  [data-radix-scroll-area-viewport] {
+    overscroll-behavior: contain;
   }
 }
 

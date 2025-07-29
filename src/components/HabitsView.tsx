@@ -27,7 +27,7 @@ const HabitsView: React.FC<HabitsViewProps> = ({
   const todayHabits = habits.filter(habit => habit.days.includes(today));
 
   return (
-    <div className="flex flex-col h-full animate-slide-up">
+    <div className="flex flex-col h-full overflow-hidden animate-slide-up">
       {/* Header fixo */}
       <div className="flex-shrink-0 text-center mb-6">
         <h1 className="text-3xl font-light text-white mb-4">
@@ -70,8 +70,8 @@ const HabitsView: React.FC<HabitsViewProps> = ({
         </div>
       </div>
       
-      {/* Lista de tarefas com scroll */}
-      <div className="flex-1 min-h-0 mb-6">
+      {/* Lista de tarefas com scroll controlado */}
+      <div className="flex-1 overflow-hidden mb-6">
         <ScrollArea className="h-full w-full">
           <div className="space-y-4 pr-2">
             {todayHabits.length === 0 ? (
