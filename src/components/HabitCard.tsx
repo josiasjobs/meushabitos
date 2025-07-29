@@ -8,6 +8,7 @@ interface HabitCardProps {
   habit: Habit;
   onToggle: (habit: Habit) => void;
   showActions?: boolean;
+  showDays?: boolean;
   onEdit?: (habit: Habit) => void;
   onDelete?: (habit: Habit) => void;
 }
@@ -16,6 +17,7 @@ const HabitCard: React.FC<HabitCardProps> = ({
   habit, 
   onToggle, 
   showActions = false,
+  showDays = true,
   onEdit,
   onDelete 
 }) => {
@@ -55,16 +57,18 @@ const HabitCard: React.FC<HabitCardProps> = ({
             )}>
               {habit.name}
             </h3>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {habit.days.map(day => (
-                <span
-                  key={day}
-                  className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
-                >
-                  {dayNames[day]}
-                </span>
-              ))}
-            </div>
+            {showDays && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {habit.days.map(day => (
+                  <span
+                    key={day}
+                    className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
+                  >
+                    {dayNames[day]}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </label>
         

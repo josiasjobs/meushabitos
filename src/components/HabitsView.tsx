@@ -4,6 +4,7 @@ import { Habit } from '@/types/habit';
 import { getTodayDay } from '@/utils/habitStorage';
 import HabitCard from './HabitCard';
 import PWAInstallButton from './PWAInstallButton';
+import Footer from './Footer';
 import { Button } from '@/components/ui/button';
 
 interface HabitsViewProps {
@@ -85,10 +86,13 @@ const HabitsView: React.FC<HabitsViewProps> = ({
               key={habit.id}
               habit={habit}
               onToggle={onToggleHabit}
+              showDays={false}
             />
           ))
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 };
