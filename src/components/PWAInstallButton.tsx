@@ -11,8 +11,13 @@ const PWAInstallButton: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
+    // Detect iOS
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    setIsIOS(iOS);
+
     // Check if app is already installed
     const checkInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -24,6 +29,7 @@ const PWAInstallButton: React.FC = () => {
 
     // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('beforeinstallprompt event fired');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
@@ -31,6 +37,7 @@ const PWAInstallButton: React.FC = () => {
 
     // Listen for appinstalled event
     const handleAppInstalled = () => {
+      console.log('PWA installed');
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
@@ -39,6 +46,14 @@ const PWAInstallButton: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // Fallback for browsers that support PWA but don't fire beforeinstallprompt
+    setTimeout(() => {
+      if (!isInstalled && !deferredPrompt && !iOS) {
+        console.log('Fallback: showing install button');
+        setIsInstallable(true);
+      }
+    }, 2000);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
@@ -46,25 +61,31 @@ const PWAInstallButton: React.FC = () => {
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-
-    try {
-      await deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
-      
-      if (result.outcome === 'accepted') {
-        console.log('PWA instalado com sucesso!');
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        
+        if (result.outcome === 'accepted') {
+          console.log('PWA instalado com sucesso!');
+        }
+        
+        setDeferredPrompt(null);
+        setIsInstallable(false);
+      } catch (error) {
+        console.error('Erro ao instalar PWA:', error);
       }
-      
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-    } catch (error) {
-      console.error('Erro ao instalar PWA:', error);
+    } else if (isIOS) {
+      // Show instructions for iOS
+      alert('Para instalar este app no iOS:\n1. Toque no ícone de compartilhar\n2. Selecione "Adicionar à Tela de Início"');
+    } else {
+      // Generic fallback
+      console.log('Install prompt not available, but button was shown');
     }
   };
 
-  // Don't show button if app is already installed or not installable
-  if (isInstalled || !isInstallable) {
+  // Show button if app is installable or on iOS (and not already installed)
+  if (isInstalled || (!isInstallable && !isIOS)) {
     return null;
   }
 

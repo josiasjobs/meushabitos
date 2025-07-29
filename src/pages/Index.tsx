@@ -111,7 +111,7 @@ const Index = () => {
     setHabits(newHabits);
     saveHabits(newHabits);
     
-    showNotification(`✅ Hábito "${name}" criado com sucesso!`);
+    // Removed notification for habit creation
     setCurrentView('habits');
   };
 
