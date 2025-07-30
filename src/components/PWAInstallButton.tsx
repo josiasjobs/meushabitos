@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { usePWADiagnostic } from './PWADiagnostic';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -12,6 +13,7 @@ const PWAInstallButton: React.FC = () => {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const { requirements, isReady } = usePWADiagnostic();
 
   useEffect(() => {
     console.log('PWA Install Button: Component mounted');
@@ -33,32 +35,6 @@ const PWAInstallButton: React.FC = () => {
 
     const installed = checkInstalled();
 
-    // Check PWA requirements
-    const checkPWARequirements = async () => {
-      console.log('PWA Install Button: Checking PWA requirements...');
-      
-      // Check if HTTPS
-      const isHTTPS = location.protocol === 'https:' || location.hostname === 'localhost';
-      console.log('PWA Install Button: HTTPS:', isHTTPS);
-      
-      // Check if manifest exists
-      try {
-        const manifestResponse = await fetch('/manifest.json');
-        const manifestExists = manifestResponse.ok;
-        console.log('PWA Install Button: Manifest exists:', manifestExists);
-      } catch (e) {
-        console.log('PWA Install Button: Manifest check failed:', e);
-      }
-      
-      // Check if service worker is registered
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.getRegistration();
-        console.log('PWA Install Button: Service Worker registered:', !!registration);
-      }
-    };
-
-    checkPWARequirements();
-
     // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       console.log('PWA Install Button: beforeinstallprompt event fired');
@@ -78,36 +54,50 @@ const PWAInstallButton: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Enhanced fallback for browsers that support PWA but don't fire beforeinstallprompt
-    setTimeout(() => {
-      console.log('PWA Install Button: Checking fallback conditions...');
-      console.log('PWA Install Button: isInstalled:', installed);
-      console.log('PWA Install Button: deferredPrompt:', !!deferredPrompt);
-      console.log('PWA Install Button: iOS:', iOS);
-      
-      if (!installed && !deferredPrompt) {
-        if (iOS) {
-          console.log('PWA Install Button: iOS fallback - showing install button');
-          setIsInstallable(true);
-        } else {
-          // Check if we're in a PWA-capable browser
-          const isPWACapable = 'serviceWorker' in navigator && 
-                              window.matchMedia && 
-                              (location.protocol === 'https:' || location.hostname === 'localhost');
-          
-          if (isPWACapable) {
-            console.log('PWA Install Button: Browser fallback - showing install button');
-            setIsInstallable(true);
-          }
-        }
-      }
-    }, 3000);
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
+
+  // Enhanced fallback logic based on PWA requirements
+  useEffect(() => {
+    if (isInstalled) return;
+
+    console.log('PWA Install Button: Checking enhanced fallback conditions...');
+    console.log('PWA Install Button: PWA Requirements:', requirements);
+    console.log('PWA Install Button: PWA Ready:', isReady);
+    console.log('PWA Install Button: Has deferred prompt:', !!deferredPrompt);
+
+    // Wait for PWA diagnostic to complete
+    if (!isReady) return;
+
+    // If we have the native prompt, use it
+    if (deferredPrompt) {
+      setIsInstallable(true);
+      return;
+    }
+
+    // Enhanced fallback conditions
+    const shouldShowFallback = 
+      requirements.isHTTPS && 
+      requirements.hasManifest && 
+      requirements.hasServiceWorker &&
+      requirements.hasIcons;
+
+    if (shouldShowFallback) {
+      console.log('PWA Install Button: Showing fallback install option');
+      setIsInstallable(true);
+    } else {
+      console.log('PWA Install Button: PWA requirements not met, hiding install button');
+      console.log('PWA Install Button: Missing requirements:', {
+        HTTPS: !requirements.isHTTPS,
+        Manifest: !requirements.hasManifest,
+        ServiceWorker: !requirements.hasServiceWorker,
+        Icons: !requirements.hasIcons
+      });
+    }
+  }, [requirements, isReady, deferredPrompt, isInstalled]);
 
   const handleInstall = async () => {
     console.log('PWA Install Button: Install button clicked');
@@ -116,59 +106,67 @@ const PWAInstallButton: React.FC = () => {
     
     if (deferredPrompt) {
       try {
-        console.log('PWA Install Button: Calling prompt()');
+        console.log('PWA Install Button: Calling native prompt()');
         await deferredPrompt.prompt();
         
         const result = await deferredPrompt.userChoice;
         console.log('PWA Install Button: User choice result:', result);
         
-        if (result.outcome === 'accepted') {
-          console.log('PWA Install Button: PWA installation accepted');
-        } else {
-          console.log('PWA Install Button: PWA installation dismissed');
-        }
-        
         setDeferredPrompt(null);
         setIsInstallable(false);
       } catch (error) {
-        console.error('PWA Install Button: Error during installation:', error);
+        console.error('PWA Install Button: Error during native installation:', error);
       }
     } else if (isIOS) {
-      // Enhanced iOS instructions
-      const message = `Para instalar este app no iOS:
+      // iOS instructions
+      const message = `Para instalar no iPhone/iPad:
 
-1. Toque no ícone de compartilhar (📤) na barra inferior
-2. Role para baixo e selecione "Adicionar à Tela de Início"
-3. Toque em "Adicionar" no canto superior direito
+1. Toque no ícone de compartilhar (📤) 
+2. Selecione "Adicionar à Tela de Início"
+3. Toque em "Adicionar"
 
-O app aparecerá na sua tela inicial como um aplicativo nativo!`;
+O app aparecerá na sua tela inicial!`;
       
       alert(message);
     } else {
-      // Generic fallback with more helpful instructions
+      // Enhanced browser-specific instructions
+      const userAgent = navigator.userAgent.toLowerCase();
+      let instructions = '';
+
+      if (userAgent.includes('chrome')) {
+        instructions = `Chrome: Clique nos 3 pontos (⋮) → "Instalar Meus Hábitos"`;
+      } else if (userAgent.includes('edge')) {
+        instructions = `Edge: Clique nos 3 pontos (⋯) → "Aplicativos" → "Instalar este site como um aplicativo"`;
+      } else if (userAgent.includes('firefox')) {
+        instructions = `Firefox: Procure pelo ícone de instalação (+) na barra de endereços`;
+      } else {
+        instructions = `Procure pela opção de "Instalar aplicativo" ou "Adicionar à tela inicial" no menu do navegador`;
+      }
+
       const message = `Para instalar este app:
 
-Chrome/Edge:
-• Clique nos 3 pontos (⋮) no menu
-• Selecione "Instalar Meus Hábitos"
+${instructions}
 
-Firefox:
-• Clique no ícone de instalação na barra de endereços
-
-Se não vê a opção, tente:
-• Atualizar a página
-• Verificar se está usando HTTPS
-• Tentar em outro navegador`;
+Se não conseguir, verifique se:
+• Está usando HTTPS
+• O navegador suporta PWA
+• Todos os recursos foram carregados`;
 
       alert(message);
-      console.log('PWA Install Button: Showed generic install instructions');
+      console.log('PWA Install Button: Showed browser-specific instructions');
     }
   };
 
-  console.log('PWA Install Button: Render - installed:', isInstalled, 'installable:', isInstallable, 'iOS:', isIOS);
+  console.log('PWA Install Button: Render state:', {
+    installed: isInstalled,
+    installable: isInstallable,
+    iOS: isIOS,
+    pwaCriteria: isReady,
+    hasPrompt: !!deferredPrompt
+  });
 
-  // Show button if app is installable or on iOS (and not already installed)
-  if (isInstalled || (!isInstallable && !isIOS)) {
+  // Only show if app is installable and not already installed
+  if (isInstalled || !isInstallable) {
     return null;
   }
 
@@ -177,7 +175,7 @@ Se não vê a opção, tente:
       variant="default"
       size="icon"
       onClick={handleInstall}
-      title="Instalar App"
+      title={deferredPrompt ? "Instalar App (Nativo)" : "Instruções de Instalação"}
       className="gradient-primary text-white hover:opacity-90 transition-all duration-300 transform hover:scale-105 shadow-lg"
     >
       📱
