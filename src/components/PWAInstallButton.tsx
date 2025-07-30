@@ -25,12 +25,17 @@ const PWAInstallButton: React.FC = () => {
 
     // Check if app is already installed
     const checkInstalled = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isWebApp = (window.navigator as any).standalone === true;
-      const installed = isStandalone || isWebApp;
-      console.log('PWA Install Button: App installed status:', installed);
-      setIsInstalled(installed);
-      return installed;
+      try {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        const isWebApp = (window.navigator as any).standalone === true;
+        const installed = isStandalone || isWebApp;
+        console.log('PWA Install Button: App installed status:', installed);
+        setIsInstalled(installed);
+        return installed;
+      } catch (error) {
+        console.error('PWA Install Button: Error checking installed status:', error);
+        return false;
+      }
     };
 
     const installed = checkInstalled();
